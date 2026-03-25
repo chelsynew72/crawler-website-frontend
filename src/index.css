@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --orange:        #E5510A;
+  --orange-light:  #FF6B2B;
+  --orange-bg:     #FFF7ED;
+  --orange-border: #FED7AA;
+  --bg:            #F7F6F2;
+  --bg-2:          #EFEFEB;
+  --white:         #FFFFFF;
+  --border:        #E2E0D8;
+  --border-dark:   #C8C5BB;
+  --text:          #1A1916;
+  --text-2:        #6B6860;
+  --text-3:        #9C9A94;
+  --green:         #059669;
+  --green-bg:      #F0FDF4;
+  --green-border:  #BBF7D0;
+  --blue:          #2563EB;
+  --blue-bg:       #EFF6FF;
+  --blue-border:   #BFDBFE;
+  --red:           #DC2626;
+  --red-bg:        #FEF2F2;
+  --red-border:    #FECACA;
+  --ff-serif:      'Instrument Serif', Georgia, serif;
+  --ff-sans:       'Geist', system-ui, sans-serif;
+  --ff-mono:       'Geist Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 100px 100px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+a { text-decoration: none; color: inherit; }
+
+button { cursor: pointer; font-family: var(--ff-sans); }
+
+input, textarea, select {
+  font-family: var(--ff-sans);
+  font-size: 14px;
+  color: var(--text);
+}
+
+input::placeholder, textarea::placeholder { color: var(--text-3); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
