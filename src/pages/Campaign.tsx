@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import type { CampaignDetail, Website, CrawlPage, PageFinding, Summary } from '../api';
 import SidebarLayout from '../components/SidebarLayout';
-import { Btn, StatusPill, Icons, IconBtn, Input, Spinner, Card } from '../components/ui';
+import { Btn, StatusPill, Icons, IconBtn, Input, Spinner,  } from '../components/ui';
 
 type Tab = 'websites' | 'pages' | 'insights';
 
