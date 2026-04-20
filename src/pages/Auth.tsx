@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandIcon, Btn, Input,  } from '../components/ui';
+import { api } from '../api';
 
 type AuthTab = 'login' | 'signup';
 type Page = 'auth' | 'forgot';
@@ -73,10 +74,15 @@ function LoginForm({ onForgot, onSwitchSignup }: { onForgot: () => void; onSwitc
     if (!pw) errs.pw = 'Password is required.';
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setLoading(false);
-    // In production, call your auth API here
-    navigate('/dashboard');
+    try {
+      const res = await api.login({ email, pw });
+      localStorage.setItem('auth_token', res.token);
+      navigate('/dashboard');
+    } catch (e: any) {
+      setErrors({ general: e.message });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -161,9 +167,20 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
     if (!terms) errs.terms = 'Please accept the terms to continue.';
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setLoading(false);
-    navigate('/dashboard');
+    try {
+      const res = await api.signup({
+        first_name: form.fn,
+        last_name: form.ln,
+        email: form.email,
+        pw: form.pw
+      });
+      localStorage.setItem('auth_token', res.token);
+      navigate('/dashboard');
+    } catch (e: any) {
+      setErrors({ general: e.message });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -180,6 +197,8 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
 
       <SocialBtns mode="signup" />
       <Divider />
+
+      {errors.general && <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>{errors.general}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <Input label="First name" placeholder="John" value={form.fn} onChange={e => setForm(f => ({ ...f, fn: e.target.value }))} error={errors.fn} />
@@ -235,9 +254,14 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
   async function submit() {
     if (!isEmail(email)) { setError('Please enter a valid email.'); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setLoading(false);
-    setSent(true);
+    try {
+      await api.forgotPassword(email);
+      setSent(true);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (sent) return (

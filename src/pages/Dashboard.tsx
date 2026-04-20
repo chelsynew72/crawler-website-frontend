@@ -1,11 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '../api';
-import type { Campaign } from '../api';
+import { api, type Campaign } from '../api';
 import SidebarLayout from '../components/SidebarLayout';
 import { Btn, Card, StatusPill, ProgressBar, Icons, IconBtn, Input, Textarea, Spinner } from '../components/ui';
 
-// ── Create Campaign Modal ─────────────────────────────────────────────────────
 function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (c: Campaign) => void }) {
   const [name, setName] = useState('');
   const [goal, setGoal] = useState('');
@@ -15,16 +13,16 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const formats = [
-    { value: 'report',    label: 'Report',    desc: 'PDF / Word document' },
-    { value: 'json',      label: 'JSON',      desc: 'Machine-readable data' },
-    { value: 'csv',       label: 'CSV',       desc: 'Spreadsheet with sources' },
+    { value: 'report', label: 'Report', desc: 'PDF / Word document' },
+    { value: 'json', label: 'JSON', desc: 'Machine-readable data' },
+    { value: 'csv', label: 'CSV', desc: 'Spreadsheet with sources' },
     { value: 'dashboard', label: 'Dashboard', desc: 'Visual in-app view' },
   ];
   const schedules = [
-    { label: 'Every 6h',  value: 6 },
+    { label: 'Every 6h', value: 6 },
     { label: 'Every 12h', value: 12 },
-    { label: 'Daily',     value: 24 },
-    { label: 'Every 2d',  value: 48 },
+    { label: 'Daily', value: 24 },
+    { label: 'Every 2d', value: 48 },
   ];
 
   async function submit() {
@@ -39,118 +37,70 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
       onClose();
     } catch (e: any) {
       setErrors({ submit: e.message });
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
   }, [onClose]);
 
   return (
-    <div
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
-        zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: '80px 24px', backdropFilter: 'blur(4px)',
-      }}
-    >
-      <div style={{
-        background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16,
-        width: '100%', maxWidth: 520, padding: 32,
-        animation: 'slideUp .3s cubic-bezier(.22,1,.36,1)',
-      }}>
-        {/* Header */}
+    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '80px 24px', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 520, padding: 32, animation: 'slideUp .3s cubic-bezier(.22,1,.36,1)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h2 style={{ fontFamily: 'var(--ff-serif)', fontSize: 24, fontWeight: 400, color: 'var(--text)' }}>
+          <h2 style={{ fontFamily: 'var(--ff-serif)', fontSize: 24, fontWeight: 400 }}>
             New <em style={{ fontStyle: 'italic', color: 'var(--orange)' }}>campaign</em>
           </h2>
-          <IconBtn title="Close" onClick={onClose}><Icons.Close /></IconBtn>
+          <IconBtn onClick={onClose}><Icons.Close /></IconBtn>
         </div>
-
-        {errors.submit && (
-          <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>
-            {errors.submit}
-          </div>
-        )}
-
-        <Input label="Campaign name" hint="required" placeholder="e.g. Competitor Pricing Research"
-          value={name} onChange={e => setName(e.target.value)} error={errors.name} />
-        <Textarea label="Campaign goal" hint="what should AI look for?"
-          placeholder="e.g. Find all pricing pages, product tiers, and discount offers across competitor websites."
-          value={goal} onChange={e => setGoal(e.target.value)} error={errors.goal} />
-
-        {/* Output format */}
+        {errors.submit && <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>{errors.submit}</div>}
+        <Input label="Campaign name" hint="required" placeholder="e.g. Competitor Pricing Research" value={name} onChange={e => setName(e.target.value)} error={errors.name} />
+        <Textarea label="Campaign goal" hint="what should AI look for?" placeholder="e.g. Find all pricing pages, product tiers, and discount offers." value={goal} onChange={e => setGoal(e.target.value)} error={errors.goal} />
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>Output format</div>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Output format</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {formats.map(f => (
-              <label key={f.value} style={{
-                border: `1px solid ${format === f.value ? 'var(--orange)' : 'var(--border-dark)'}`,
-                background: format === f.value ? 'var(--orange-bg)' : 'var(--white)',
-                borderRadius: 8, padding: 12, cursor: 'pointer', transition: 'all .15s',
-              }}>
-                <input type="radio" name="fmt" value={f.value} checked={format === f.value}
-                  onChange={() => setFormat(f.value)} style={{ display: 'none' }} />
+              <label key={f.value} style={{ border: `1px solid ${format === f.value ? 'var(--orange)' : 'var(--border-dark)'}`, background: format === f.value ? 'var(--orange-bg)' : 'var(--white)', borderRadius: 8, padding: 12, cursor: 'pointer' }}>
+                <input type="radio" name="fmt" value={f.value} checked={format === f.value} onChange={() => setFormat(f.value)} style={{ display: 'none' }} />
                 <div style={{ fontSize: 13, fontWeight: 500, color: format === f.value ? 'var(--orange)' : 'var(--text)', marginBottom: 2 }}>{f.label}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 300 }}>{f.desc}</div>
               </label>
             ))}
           </div>
         </div>
-
-        {/* Schedule */}
         <div style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>Crawl schedule</div>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Crawl schedule</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {schedules.map(s => (
-              <button key={s.value} onClick={() => setSchedule(s.value)} style={{
-                flex: 1, border: `1px solid ${schedule === s.value ? 'var(--orange)' : 'var(--border-dark)'}`,
-                background: schedule === s.value ? 'var(--orange-bg)' : 'var(--white)',
-                color: schedule === s.value ? 'var(--orange)' : 'var(--text-2)',
-                borderRadius: 7, padding: '9px 6px', fontSize: 12, fontFamily: 'var(--ff-mono)',
-                cursor: 'pointer', transition: 'all .15s',
-              }}>{s.label}</button>
+              <button key={s.value} onClick={() => setSchedule(s.value)} style={{ flex: 1, border: `1px solid ${schedule === s.value ? 'var(--orange)' : 'var(--border-dark)'}`, background: schedule === s.value ? 'var(--orange-bg)' : 'var(--white)', color: schedule === s.value ? 'var(--orange)' : 'var(--text-2)', borderRadius: 7, padding: '9px 6px', fontSize: 12, fontFamily: 'var(--ff-mono)', cursor: 'pointer' }}>
+                {s.label}
+              </button>
             ))}
           </div>
         </div>
-
-        {/* Footer */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
-          <button onClick={onClose} style={{ background: 'var(--white)', border: '1px solid var(--border-dark)', color: 'var(--text-2)', fontFamily: 'var(--ff-sans)', fontSize: 13, padding: '8px 16px', borderRadius: 7, cursor: 'pointer' }}>
-            Cancel
-          </button>
-          <Btn onClick={submit} loading={loading} style={{ fontSize: 13, padding: '8px 20px' }}>
-            {!loading && <Icons.Plus />} Create Campaign
-          </Btn>
+          <button onClick={onClose} style={{ background: 'var(--white)', border: '1px solid var(--border-dark)', color: 'var(--text-2)', fontFamily: 'var(--ff-sans)', fontSize: 13, padding: '8px 16px', borderRadius: 7, cursor: 'pointer' }}>Cancel</button>
+          <Btn onClick={submit} loading={loading} style={{ fontSize: 13, padding: '8px 20px' }}>{!loading && <Icons.Plus />} Create Campaign</Btn>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Campaign Card ─────────────────────────────────────────────────────────────
-function CampaignCard({ campaign, onDelete, onTrigger, delay }: {
-  campaign: Campaign; onDelete: (id: string) => void; onTrigger: (id: string) => void; delay: number;
-}) {
-  const navigate = useNavigate();
-  const isCrawling = campaign.status === 'crawling';
+type EnrichedCampaign = Campaign & { website_count: number; pages_crawled: number; insights_count: number };
 
+function CampaignCard({ campaign, onDelete, onTrigger, delay }: { campaign: EnrichedCampaign; onDelete: (id: string) => void; onTrigger: (id: string) => void; delay: number }) {
+  const navigate = useNavigate();
   return (
-    <div
-      style={{ animation: `fadeUp .4s cubic-bezier(.22,1,.36,1) ${delay}ms both` }}
-    >
+    <div style={{ animation: `fadeUp .4s cubic-bezier(.22,1,.36,1) ${delay}ms both` }}>
       <Card onClick={() => navigate(`/campaign/${campaign.id}`)} style={{ marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{campaign.name}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 520 }}>
-              {campaign.goal}
-            </div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{campaign.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 520 }}>{campaign.goal}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <StatusPill status={campaign.status} />
@@ -161,42 +111,58 @@ function CampaignCard({ campaign, onDelete, onTrigger, delay }: {
             </div>
           </div>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           {[
-            { icon: <Icons.Globe />, text: `${(campaign as any).website_count ?? 0} website${(campaign as any).website_count !== 1 ? 's' : ''}` },
-            { icon: <Icons.File />,  text: `${(campaign as any).pages_crawled ?? 0} pages` },
-            { icon: <Icons.Insight />, text: `${(campaign as any).insights_count ?? 0} insights` },
-            { icon: <Icons.Cal />,  text: new Date(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+            { icon: <Icons.Globe />, text: `${campaign.website_count} website${campaign.website_count !== 1 ? 's' : ''}` },
+            { icon: <Icons.File />,  text: `${campaign.pages_crawled.toLocaleString()} pages` },
+            { icon: <Icons.Insight />, text: `${campaign.insights_count} insights` },
+            { icon: <Icons.Cal />,   text: new Date(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
           ].map((m, i) => (
-            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)' }}>
-              {m.icon}{m.text}
-            </span>
+            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)' }}>{m.icon}{m.text}</span>
           ))}
-          <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'var(--ff-mono)', color: 'var(--text-3)' }}>
-            {campaign.output_format.toUpperCase()}
-          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'var(--ff-mono)', color: 'var(--text-3)' }}>{campaign.output_format.toUpperCase()}</span>
         </div>
-
-        {isCrawling && <ProgressBar value={Math.floor(Math.random() * 60) + 20} label="Crawl progress" />}
+        {campaign.status === 'crawling' && <ProgressBar value={50} label="Crawl in progress" />}
       </Card>
     </div>
   );
 }
 
-// ── Dashboard Page ────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaigns, setCampaigns] = useState<EnrichedCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const totalCampaigns = campaigns.length;
+  const totalWebsites  = campaigns.reduce((s, c) => s + c.website_count, 0);
+  const totalPages     = campaigns.reduce((s, c) => s + c.pages_crawled, 0);
+  const totalInsights  = campaigns.reduce((s, c) => s + c.insights_count, 0);
+
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await api.getCampaigns();
-      setCampaigns(Array.isArray(data) ? data : []);
-    } catch (e) {
+      const list = await api.getCampaigns();
+      const enriched = await Promise.all(
+        (Array.isArray(list) ? list : []).map(async (c) => {
+          try {
+            const detail = await api.getCampaign(c.id);
+            const websiteCount = (detail.websites ?? []).length;
+            const pagesCrawled = (detail.websites ?? []).reduce((s: number, w: any) => s + (w.pages_found ?? 0), 0);
+            let insightCount = 0;
+            try {
+              const ins = await api.getInsights(c.id);
+              insightCount = (ins.page_findings ?? []).length;
+            } catch { /* no insights yet */ }
+            return { ...c, website_count: websiteCount, pages_crawled: pagesCrawled, insights_count: insightCount };
+          } catch {
+            return { ...c, website_count: 0, pages_crawled: 0, insights_count: 0 };
+          }
+        })
+      );
+      setCampaigns(enriched);
+    } catch {
       setCampaigns([]);
     } finally {
       setLoading(false);
@@ -218,21 +184,26 @@ export default function Dashboard() {
     c.goal.toLowerCase().includes(search.toLowerCase())
   );
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm('Delete this campaign? This cannot be undone.')) return;
     setCampaigns(prev => prev.filter(c => c.id !== id));
   }
 
-  function handleTrigger(id: string) {
+  async function handleTrigger(id: string) {
     setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: 'crawling' } : c));
-    api.triggerCrawl(id).catch(() => {});
+    try {
+      await api.triggerCrawl(id);
+    } catch (e: any) {
+      alert(e.message);
+      setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: 'active' } : c));
+    }
   }
 
-  const stats = [
-    { label: 'Total Campaigns', value: campaigns.length, delta: '+1 this week', up: true },
-    { label: 'Pages Crawled',   value: '1,847',          delta: '+312 today',   up: true },
-    { label: 'Websites Tracked',value: campaigns.length * 2, delta: 'Across all', up: false },
-    { label: 'AI Insights',     value: '94',             delta: '+47 last run',  up: true },
+  const statCards = [
+    { label: 'Total Campaigns',  value: totalCampaigns,              delta: totalCampaigns > 0 ? `${totalCampaigns} active` : 'None yet',     up: totalCampaigns > 0 },
+    { label: 'Pages Crawled',    value: totalPages.toLocaleString(),  delta: totalPages > 0 ? 'All time' : 'No crawls yet',                    up: totalPages > 0 },
+    { label: 'Websites Tracked', value: totalWebsites,                delta: 'Across all campaigns',                                           up: false },
+    { label: 'AI Insights',      value: totalInsights,                delta: totalInsights > 0 ? 'Generated' : 'Run analysis to generate',     up: totalInsights > 0 },
   ];
 
   return (
@@ -242,25 +213,24 @@ export default function Dashboard() {
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--white)', border: '1px solid var(--border-dark)', borderRadius: 7, padding: '0 12px', height: 32 }}>
             <Icons.Search />
-            <input
-              placeholder="Search campaigns..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ border: 'none', outline: 'none', fontSize: 13, color: 'var(--text)', background: 'transparent', width: 180 }}
-            />
+            <input placeholder="Search campaigns..." value={search} onChange={e => setSearch(e.target.value)}
+              style={{ border: 'none', outline: 'none', fontSize: 13, color: 'var(--text)', background: 'transparent', width: 180 }} />
           </div>
-          <button style={{ width: 32, height: 32, border: '1px solid var(--border-dark)', borderRadius: 7, background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-2)' }}>
-            <Icons.Bell />
+          <button onClick={load} title="Refresh" style={{ width: 32, height: 32, border: '1px solid var(--border-dark)', borderRadius: 7, background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-2)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
           </button>
         </>
       }
     >
-      {/* Stats */}
+      {/* Stats — all real from API */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
-        {stats.map(s => (
+        {statCards.map(s => (
           <div key={s.label} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 10, padding: '18px 20px' }}>
             <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'var(--ff-mono)', marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 600, fontFamily: 'var(--ff-mono)', color: s.label === 'Total Campaigns' ? 'var(--orange)' : 'var(--text)', lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, fontFamily: 'var(--ff-mono)', color: s.label === 'Total Campaigns' ? 'var(--orange)' : 'var(--text)', lineHeight: 1 }}>{loading ? '—' : s.value}</div>
             <div style={{ fontSize: 11, color: s.up ? 'var(--green)' : 'var(--text-3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 3 }}>
               {s.up && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>}
               {s.delta}
@@ -269,10 +239,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Section header */}
+      {/* List header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>All campaigns</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>All campaigns</span>
           <span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)', background: 'var(--bg-2)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: 100 }}>{filtered.length}</span>
         </div>
         <Btn size="sm" onClick={() => setShowModal(true)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 6 }}>
@@ -280,40 +250,26 @@ export default function Dashboard() {
         </Btn>
       </div>
 
-      {/* List */}
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, gap: 10, color: 'var(--text-3)' }}>
           <Spinner color="var(--text-3)" size={18} /> Loading campaigns...
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 12, padding: '60px 40px', textAlign: 'center' }}>
-          <div style={{ width: 52, height: 52, background: 'var(--bg)', border: '1px solid var(--border-dark)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <Icons.Search />
-          </div>
-          <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 20, fontWeight: 400, color: 'var(--text)', marginBottom: 6 }}>
-            {search ? 'No campaigns found' : 'No campaigns yet'}
-          </div>
-          <p style={{ fontSize: 14, color: 'var(--text-2)', fontWeight: 300, marginBottom: 24 }}>
-            {search ? 'Try a different search term.' : 'Create your first campaign to start crawling.'}
-          </p>
-          {!search && (
-            <Btn size="sm" onClick={() => setShowModal(true)} style={{ fontSize: 13, padding: '8px 16px', borderRadius: 7 }}>
-              <Icons.Plus /> New Campaign
-            </Btn>
-          )}
+          <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 20, color: 'var(--text)', marginBottom: 6 }}>{search ? 'No campaigns found' : 'No campaigns yet'}</div>
+          <p style={{ fontSize: 14, color: 'var(--text-2)', fontWeight: 300, marginBottom: 24 }}>{search ? 'Try a different search term.' : 'Create your first campaign to start crawling.'}</p>
+          {!search && <Btn size="sm" onClick={() => setShowModal(true)} style={{ fontSize: 13, padding: '8px 16px', borderRadius: 7 }}><Icons.Plus /> New Campaign</Btn>}
         </div>
       ) : (
-        <div>
-          {filtered.map((c, i) => (
-            <CampaignCard key={c.id} campaign={c} onDelete={handleDelete} onTrigger={handleTrigger} delay={i * 60} />
-          ))}
-        </div>
+        filtered.map((c, i) => (
+          <CampaignCard key={c.id} campaign={c} onDelete={handleDelete} onTrigger={handleTrigger} delay={i * 60} />
+        ))
       )}
 
       {showModal && (
         <CreateModal
           onClose={() => setShowModal(false)}
-          onCreated={c => { setCampaigns(prev => [c, ...prev]); }}
+          onCreated={c => setCampaigns(prev => [{ ...c, website_count: 0, pages_crawled: 0, insights_count: 0 }, ...prev])}
         />
       )}
     </SidebarLayout>

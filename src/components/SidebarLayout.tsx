@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BrandIcon, Icons } from './ui';
+import { api, type User } from '../api';
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,21 @@ interface SidebarLayoutProps {
 export default function SidebarLayout({ children, title, topbarRight }: SidebarLayoutProps) {
   const navigate = useNavigate();
   const loc = useLocation();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    api.me()
+      .then(setUser)
+      .catch(() => {
+        localStorage.removeItem('auth_token');
+        navigate('/auth');
+      });
+  }, [navigate]);
+
+  function handleLogout() {
+    localStorage.removeItem('auth_token');
+    navigate('/auth');
+  }
 
   const navItems = [
     { icon: <Icons.Grid />, label: 'Campaigns', path: '/dashboard', badge: null },
@@ -83,18 +99,31 @@ export default function SidebarLayout({ children, title, topbarRight }: SidebarL
 
         {/* User */}
         <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, borderRadius: 7, cursor: 'pointer' }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: '50%',
-              background: 'linear-gradient(135deg,#1D4ED8,#7C3AED)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 600, color: '#fff', flexShrink: 0,
-            }}>JS</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>John Smith</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)' }}>Free plan</div>
+          <div style={{ position: 'relative' }}>
+            <div
+              onClick={() => {
+                if (confirm('Are you sure you want to log out?')) handleLogout();
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, borderRadius: 7, cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'linear-gradient(135deg,#1D4ED8,#7C3AED)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 600, color: '#fff', flexShrink: 0,
+              }}>{user ? `${user.first_name[0]}${user.last_name[0]}` : '--'}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user ? `${user.first_name} ${user.last_name}` : 'Loading...'}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)' }}>
+                  {user ? user.plan : '...'} plan
+                </div>
+              </div>
+              <Icons.Dots />
             </div>
-            <Icons.Dots />
           </div>
         </div>
       </aside>

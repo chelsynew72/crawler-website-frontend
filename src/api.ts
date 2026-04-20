@@ -1,8 +1,12 @@
 const BASE = import.meta.env.VITE_API_URL || 'https://my-crawler.campaign-crawler.workers.dev';
 
 async function req<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...options,
   });
   if (!res.ok) {
@@ -13,6 +17,15 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Auth
+  login: (body: LoginBody) =>
+    req<{ token: string; user: User }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  signup: (body: SignupBody) =>
+    req<{ token: string; user: User }>('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+  forgotPassword: (email: string) =>
+    req<{ message: string }>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  me: () => req<User>('/auth/me'),
+
   // Campaigns
   getCampaigns: () => req<Campaign[]>('/campaigns'),
   getCampaign:  (id: string) => req<CampaignDetail>(`/campaigns/${id}`),
@@ -41,6 +54,27 @@ export const api = {
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+export interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  plan: string;
+  created_at: string;
+}
+
+export interface LoginBody {
+  email: string;
+  pw: string;
+}
+
+export interface SignupBody {
+  first_name: string;
+  last_name: string;
+  email: string;
+  pw: string;
+}
 
 export interface Campaign {
   id: string;
