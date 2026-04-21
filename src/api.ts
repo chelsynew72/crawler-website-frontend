@@ -29,6 +29,8 @@ export const api = {
   // Campaigns
   getCampaigns: () => req<Campaign[]>('/campaigns'),
   getCampaign:  (id: string) => req<CampaignDetail>(`/campaigns/${id}`),
+  deleteCampaign: (id: string) =>
+    req<{ message: string }>(`/campaigns/${id}`, { method: 'DELETE' }),
   createCampaign: (body: CreateCampaignBody) =>
     req<{ campaign: Campaign }>('/campaigns', { method: 'POST', body: JSON.stringify(body) }),
 

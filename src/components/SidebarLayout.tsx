@@ -15,14 +15,18 @@ export default function SidebarLayout({ children, title, topbarRight }: SidebarL
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    api.me()
-      .then(setUser)
-      .catch(() => {
-        localStorage.removeItem('auth_token');
-        navigate('/auth');
-      });
-  }, [navigate]);
-
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    navigate('/auth');
+    return;
+  }
+  api.me()
+    .then(setUser)
+    .catch(() => {
+      localStorage.removeItem('auth_token');
+      navigate('/auth');
+    });
+}, [navigate]);
   function handleLogout() {
     localStorage.removeItem('auth_token');
     navigate('/auth');

@@ -201,7 +201,12 @@ export default function Dashboard() {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this campaign? This cannot be undone.')) return;
-    setCampaigns(prev => prev.filter(c => c.id !== id));
+    try {
+      await api.deleteCampaign(id);
+      setCampaigns(prev => prev.filter(c => c.id !== id));
+    } catch (e: any) {
+      alert('Failed to delete: ' + e.message);
+    }
   }
 
   async function handleTrigger(id: string) {
