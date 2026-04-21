@@ -40,10 +40,25 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     } finally { setLoading(false); }
   }
 
+  // Scroll lock for modal
   useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
+
+    return () => {
+      document.removeEventListener('keydown', h);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
   }, [onClose]);
 
   return (
