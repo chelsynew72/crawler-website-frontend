@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "my-crawler-ui",
+	"name": "crawler-website-frontend",
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-03-17",
 	"assets": {
