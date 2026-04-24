@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+} from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCrKh8Z9Gachjf7wJpUnNcd8fq9JB_8qGs",
@@ -14,17 +20,18 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export async function signInWithGoogle(): Promise<string | null> {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const token = await result.user.getIdToken();
-    return token;
-  } catch (error) {
-    console.error('Google sign in failed:', error);
-    return null;
-  }
+export async function signInWithGoogle(): Promise<void> {
+  await signInWithRedirect(auth, googleProvider);
+}
+
+export async function getGoogleRedirectResult() {
+  return getRedirectResult(auth);
 }
 
 export async function firebaseSignOut() {
   await signOut(auth);
 }
+
+
+
+

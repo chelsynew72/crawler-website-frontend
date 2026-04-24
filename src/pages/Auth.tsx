@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandIcon, Btn, Input,  } from '../components/ui';
 import { api } from '../api';
-import { signInWithGoogle } from '../firebase';
+import { signInWithGoogle, getGoogleRedirectResult,  } from '../firebase';
+
 
 type AuthTab = 'login' | 'signup';
 type Page = 'auth' | 'forgot';
@@ -23,43 +24,22 @@ function GoogleIcon() {
 
 
 // Shared social buttons
+// Replace SocialBtns entirely:
 function SocialBtns({ mode }: { mode: 'login' | 'signup' }) {
-  const navigate = useNavigate();
   const verb = mode === 'login' ? 'Continue' : 'Sign up';
-
-  const handleGoogleSignIn = async () => {
-    const firebaseToken = await signInWithGoogle();
-    if (!firebaseToken) { alert('Google sign in failed'); return; }
-
-    // Get user info from Firebase
-    const { auth } = await import('../firebase');
-    const firebaseUser = auth.currentUser;
-    if (!firebaseUser) return;
-
-    try {
-      const res = await api.authFirebase({
-        firebase_token: firebaseToken,
-        first_name: firebaseUser.displayName?.split(' ')[0] || 'User',
-        last_name: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
-        email: firebaseUser.email || '',
-      });
-      localStorage.setItem('auth_token', res.token);
-      navigate('/dashboard');
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
   const btnStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
     padding: '10px 16px', border: '1px solid var(--border-dark)', borderRadius: 8,
     background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 400,
-    fontFamily: 'var(--ff-sans)', cursor: 'pointer', textDecoration: 'none',
-    transition: 'background .15s, border-color .15s, transform .1s', width: '100%',
+    fontFamily: 'var(--ff-sans)', cursor: 'pointer',
+    transition: 'background .15s, border-color .15s', width: '100%',
   };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <button style={btnStyle} onClick={handleGoogleSignIn}>
+      <button style={btnStyle}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; }}
+        onClick={() => signInWithGoogle()}>
         <GoogleIcon /> {verb} with Google
       </button>
     </div>
@@ -330,6 +310,25 @@ export default function Auth() {
     if (searchParams.get('tab') === 'signup') setTab('signup');
     if (searchParams.get('page') === 'forgot') setPage('forgot');
   }, [searchParams]);
+
+  useEffect(() => {
+    getGoogleRedirectResult().then(async (result) => {
+      if (!result?.user) return;
+      const firebaseToken = await result.user.getIdToken();
+      try {
+        const res = await api.authFirebase({
+          firebase_token: firebaseToken,
+          first_name: result.user.displayName?.split(' ')[0] || 'User',
+          last_name: result.user.displayName?.split(' ').slice(1).join(' ') || '',
+          email: result.user.email || '',
+        });
+        localStorage.setItem('auth_token', res.token);
+        navigate('/dashboard');
+      } catch (e: any) {
+        console.error('Auth failed:', e.message);
+      }
+    }).catch(() => {});
+  }, [navigate]);
 
   const cardStyle: React.CSSProperties = {
     background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16,
