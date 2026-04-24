@@ -7,7 +7,6 @@ import { Btn, StatusPill, Icons, IconBtn, Input, Spinner,  } from '../components
 
 type Tab = 'websites' | 'pages' | 'insights';
 
-// ── Add Website Modal ─────────────────────────────────────────────────────────
 function AddWebsiteModal({ campaignId, onClose, onAdded }: {
   campaignId: string; onClose: () => void; onAdded: (w: Website) => void;
 }) {
@@ -56,7 +55,6 @@ function AddWebsiteModal({ campaignId, onClose, onAdded }: {
   );
 }
 
-// ── Insights Panel ────────────────────────────────────────────────────────────
 function InsightsPanel({ campaignId }: { campaignId: string }) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [findings, setFindings] = useState<PageFinding[]>([]);
@@ -183,7 +181,6 @@ function InsightsPanel({ campaignId }: { campaignId: string }) {
   );
 }
 
-// ── Campaign Detail Page ──────────────────────────────────────────────────────
 export default function CampaignPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
