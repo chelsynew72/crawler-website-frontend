@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandIcon, Btn, Input,  } from '../components/ui';
 import { api } from '../api';
+import { signInWithGoogle } from '../firebase';
 
 type AuthTab = 'login' | 'signup';
 type Page = 'auth' | 'forgot';
@@ -23,7 +24,32 @@ function GoogleIcon() {
 
 // Shared social buttons
 function SocialBtns({ mode }: { mode: 'login' | 'signup' }) {
+  const navigate = useNavigate();
   const verb = mode === 'login' ? 'Continue' : 'Sign up';
+
+  const handleGoogleSignIn = async () => {
+    const firebaseToken = await signInWithGoogle();
+    if (!firebaseToken) { alert('Google sign in failed'); return; }
+
+    // Get user info from Firebase
+    const { auth } = await import('../firebase');
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) return;
+
+    try {
+      const res = await api.authFirebase({
+        firebase_token: firebaseToken,
+        first_name: firebaseUser.displayName?.split(' ')[0] || 'User',
+        last_name: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+        email: firebaseUser.email || '',
+      });
+      localStorage.setItem('auth_token', res.token);
+      navigate('/dashboard');
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
   const btnStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
     padding: '10px 16px', border: '1px solid var(--border-dark)', borderRadius: 8,
@@ -33,7 +59,7 @@ function SocialBtns({ mode }: { mode: 'login' | 'signup' }) {
   };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <button style={btnStyle} onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg)'; e.currentTarget.style.transform = 'translateY(-1px)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; e.currentTarget.style.transform = ''; }}>
+      <button style={btnStyle} onClick={handleGoogleSignIn}>
         <GoogleIcon /> {verb} with Google
       </button>
     </div>
