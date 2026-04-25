@@ -27,17 +27,28 @@ export default function SidebarLayout({ children, title, topbarRight }: SidebarL
   const w = useWidth();
   const isMobile = w < 768;
 
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) { navigate('/auth'); return; }
-    api.me().then(setUser).catch(() => {
+  const [authChecked, setAuthChecked] = useState(false);
+
+useEffect(() => {
+  const token = localStorage.getItem('auth_token');
+  if (!token) { navigate('/auth'); return; }
+  api.me()
+    .then(u => { setUser(u); setAuthChecked(true); })
+    .catch(() => {
       localStorage.removeItem('auth_token');
       navigate('/auth');
     });
-  }, [navigate]);
+}, [navigate]);
 
-  // Close sidebar on route change (mobile)
-  useEffect(() => { setMobileOpen(false); }, [loc.pathname]);
+// In the return, wrap children with auth check:
+if (!authChecked) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: 10, color: 'var(--text-3)' }}>
+      <div style={{ width: 20, height: 20, border: '2px solid var(--border-dark)', borderTopColor: 'var(--orange)', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+      Loading...
+    </div>
+  );
+}
 
   function handleLogout() {
     if (confirm('Are you sure you want to log out?')) {
