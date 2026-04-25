@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BrandIcon, Btn, Input,  } from '../components/ui';
+import { BrandIcon, Btn, Input } from '../components/ui';
 import { api } from '../api';
-import { signInWithGoogle, getGoogleRedirectResult,  } from '../firebase';
-
+import { signInWithGoogle, getGoogleRedirectResult } from '../firebase';
 
 type AuthTab = 'login' | 'signup';
 type Page = 'auth' | 'forgot';
 
 function isEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
+// ── Icons ─────────────────────────────────────────────────────────────────────
 function GoogleIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24">
@@ -21,31 +21,7 @@ function GoogleIcon() {
   );
 }
 
-
-
-// Shared social buttons
-// Replace SocialBtns entirely:
-function SocialBtns({ mode }: { mode: 'login' | 'signup' }) {
-  const verb = mode === 'login' ? 'Continue' : 'Sign up';
-  const btnStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-    padding: '10px 16px', border: '1px solid var(--border-dark)', borderRadius: 8,
-    background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 400,
-    fontFamily: 'var(--ff-sans)', cursor: 'pointer',
-    transition: 'background .15s, border-color .15s', width: '100%',
-  };
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <button style={btnStyle}
-        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; }}
-        onClick={() => signInWithGoogle()}>
-        <GoogleIcon /> {verb} with Google
-      </button>
-    </div>
-  );
-}
-
+// ── Divider ───────────────────────────────────────────────────────────────────
 function Divider() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
@@ -53,6 +29,45 @@ function Divider() {
       <span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)', whiteSpace: 'nowrap' }}>or continue with email</span>
       <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
     </div>
+  );
+}
+
+// ── Google Button ─────────────────────────────────────────────────────────────
+function GoogleBtn({ mode }: { mode: 'login' | 'signup' }) {
+  const [loading, setLoading] = useState(false);
+  const verb = mode === 'login' ? 'Continue' : 'Sign up';
+
+  async function handleClick() {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+      // Page will redirect to Google — control returns to Auth useEffect on callback
+    } catch (e: any) {
+      console.error('Google redirect failed:', e);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+        padding: '10px 16px', border: '1px solid var(--border-dark)', borderRadius: 8,
+        background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 400,
+        fontFamily: 'var(--ff-sans)', cursor: loading ? 'not-allowed' : 'pointer',
+        opacity: loading ? 0.7 : 1, width: '100%',
+        transition: 'background .15s, border-color .15s',
+      }}
+      onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--bg)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; }}
+    >
+      {loading ? (
+        <div style={{ width: 16, height: 16, border: '2px solid var(--border-dark)', borderTopColor: 'var(--orange)', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+      ) : <GoogleIcon />}
+      {loading ? 'Redirecting to Google...' : `${verb} with Google`}
+    </button>
   );
 }
 
@@ -77,9 +92,7 @@ function LoginForm({ onForgot, onSwitchSignup }: { onForgot: () => void; onSwitc
       navigate('/dashboard');
     } catch (e: any) {
       setErrors({ general: e.message });
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   return (
@@ -96,10 +109,14 @@ function LoginForm({ onForgot, onSwitchSignup }: { onForgot: () => void; onSwitc
         Log in to your campaigns and insights.
       </p>
 
-      <SocialBtns mode="login" />
+      <GoogleBtn mode="login" />
       <Divider />
 
-      {errors.general && <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>{errors.general}</div>}
+      {errors.general && (
+        <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>
+          {errors.general}
+        </div>
+      )}
 
       <Input label="Email address" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} error={errors.email} />
 
@@ -109,12 +126,20 @@ function LoginForm({ onForgot, onSwitchSignup }: { onForgot: () => void; onSwitc
           <button onClick={onForgot} style={{ fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--ff-sans)' }}>Forgot password?</button>
         </div>
         <div style={{ position: 'relative' }}>
-          <input type={showPw ? 'text' : 'password'} placeholder="Your password" value={pw} onChange={e => setPw(e.target.value)}
+          <input
+            type={showPw ? 'text' : 'password'}
+            placeholder="Your password"
+            value={pw}
+            onChange={e => setPw(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && submit()}
-            style={{ width: '100%', padding: '10px 40px 10px 13px', border: `1px solid ${errors.pw ? 'var(--red)' : 'var(--border-dark)'}`, borderRadius: 8, background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 300, outline: 'none', fontFamily: 'var(--ff-sans)' }} />
+            style={{ width: '100%', padding: '10px 40px 10px 13px', border: `1px solid ${errors.pw ? 'var(--red)' : 'var(--border-dark)'}`, borderRadius: 8, background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 300, outline: 'none', fontFamily: 'var(--ff-sans)' }}
+          />
           <button onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', display: 'flex', alignItems: 'center' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              {showPw ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}
+              {showPw
+                ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+              }
             </svg>
           </button>
         </div>
@@ -152,8 +177,8 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
     return s;
   }
 
-  const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
   const strengthColors = ['', '#EF4444', '#F59E0B', '#10B981', '#059669'];
+  const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
 
   async function submit() {
     const errs: Record<string, string> = {};
@@ -165,19 +190,12 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
     try {
-      const res = await api.signup({
-        first_name: form.fn,
-        last_name: form.ln,
-        email: form.email,
-        pw: form.pw
-      });
+      const res = await api.signup({ first_name: form.fn, last_name: form.ln, email: form.email, pw: form.pw });
       localStorage.setItem('auth_token', res.token);
       navigate('/dashboard');
     } catch (e: any) {
       setErrors({ general: e.message });
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   return (
@@ -192,10 +210,14 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
       </h1>
       <p style={{ fontSize: 14, color: 'var(--text-2)', fontWeight: 300, marginBottom: 24 }}>Free account. No credit card required.</p>
 
-      <SocialBtns mode="signup" />
+      <GoogleBtn mode="signup" />
       <Divider />
 
-      {errors.general && <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>{errors.general}</div>}
+      {errors.general && (
+        <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>
+          {errors.general}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <Input label="First name" placeholder="John" value={form.fn} onChange={e => setForm(f => ({ ...f, fn: e.target.value }))} error={errors.fn} />
@@ -205,9 +227,13 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
 
       <div style={{ marginBottom: 14 }}>
         <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', display: 'block', marginBottom: 5 }}>Password</label>
-        <input type="password" placeholder="Create a strong password" value={form.pw}
+        <input
+          type="password"
+          placeholder="Create a strong password"
+          value={form.pw}
           onChange={e => { setForm(f => ({ ...f, pw: e.target.value })); setStrength(calcStrength(e.target.value)); }}
-          style={{ width: '100%', padding: '10px 13px', border: `1px solid ${errors.pw ? 'var(--red)' : 'var(--border-dark)'}`, borderRadius: 8, background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 300, outline: 'none', fontFamily: 'var(--ff-sans)' }} />
+          style={{ width: '100%', padding: '10px 13px', border: `1px solid ${errors.pw ? 'var(--red)' : 'var(--border-dark)'}`, borderRadius: 8, background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 300, outline: 'none', fontFamily: 'var(--ff-sans)' }}
+        />
         {errors.pw && <p style={{ fontSize: 12, color: 'var(--red)', marginTop: 4 }}>{errors.pw}</p>}
         {form.pw && (
           <div style={{ marginTop: 7 }}>
@@ -256,9 +282,7 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
       setSent(true);
     } catch (e: any) {
       setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   if (sent) return (
@@ -266,7 +290,7 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
       <div style={{ width: 52, height: 52, background: 'var(--green-bg)', border: '1px solid var(--green-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <h2 style={{ fontFamily: 'var(--ff-serif)', fontSize: 26, fontWeight: 400, color: 'var(--text)', marginBottom: 8 }}>
+      <h2 style={{ fontFamily: 'var(--ff-serif)', fontSize: 24, fontWeight: 400, color: 'var(--text)', marginBottom: 8 }}>
         Check your <em style={{ fontStyle: 'italic', color: 'var(--orange)' }}>inbox</em>
       </h2>
       <p style={{ fontSize: 14, color: 'var(--text-2)', fontWeight: 300, lineHeight: 1.6, marginBottom: 24 }}>
@@ -303,46 +327,66 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
 export default function Auth() {
   const [tab, setTab] = useState<AuthTab>('login');
   const [page, setPage] = useState<Page>('auth');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  // Handle Google redirect result when user comes back from Google
   useEffect(() => {
     if (searchParams.get('tab') === 'signup') setTab('signup');
     if (searchParams.get('page') === 'forgot') setPage('forgot');
-  }, [searchParams]);
 
-  useEffect(() => {
-    getGoogleRedirectResult().then(async (result) => {
-      if (!result?.user) return;
-      const firebaseToken = await result.user.getIdToken();
-      try {
-        const res = await api.authFirebase({
-          firebase_token: firebaseToken,
-          first_name: result.user.displayName?.split(' ')[0] || 'User',
-          last_name: result.user.displayName?.split(' ').slice(1).join(' ') || '',
-          email: result.user.email || '',
-        });
-        localStorage.setItem('auth_token', res.token);
-        navigate('/dashboard');
-      } catch (e: any) {
-        console.error('Auth failed:', e.message);
-      }
-    }).catch(() => {});
-  }, [navigate]);
+    // Check for Google redirect result
+    setGoogleLoading(true);
+    getGoogleRedirectResult()
+      .then(async (result) => {
+        setGoogleLoading(false);
+        if (!result) return; // No redirect result — normal page load
 
-  const cardStyle: React.CSSProperties = {
-    background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16,
-    width: '100%', maxWidth: 420, padding: 40,
-    boxShadow: '0 2px 24px rgba(0,0,0,0.04)',
-    animation: 'fadeUp .4s cubic-bezier(.22,1,.36,1)',
-  };
+        // We have a Google user — exchange for our token
+        try {
+          const firebaseToken = await result.user.getIdToken();
+          const displayName   = result.user.displayName ?? '';
+          const parts         = displayName.split(' ');
+
+          const res = await api.authFirebase({
+            firebase_token: firebaseToken,
+            first_name: parts[0] || 'User',
+            last_name:  parts.slice(1).join(' ') || '',
+            email:      result.user.email ?? '',
+          });
+
+          localStorage.setItem('auth_token', res.token);
+          navigate('/dashboard');
+        } catch (e: any) {
+          setGoogleError('Google sign-in failed: ' + e.message);
+        }
+      })
+      .catch((err) => {
+        setGoogleLoading(false);
+        // auth/cancelled errors are normal — user closed the popup or cancelled
+        if (!err.code?.includes('cancelled') && !err.code?.includes('popup-closed')) {
+          setGoogleError('Google sign-in error: ' + err.message);
+        }
+      });
+  }, [navigate, searchParams]);
+
+  // Show loading spinner while processing Google redirect
+  if (googleLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: 16, background: 'var(--bg)' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid var(--border)', borderTopColor: 'var(--orange)', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+        <p style={{ fontSize: 14, color: 'var(--text-2)', fontFamily: 'var(--ff-sans)' }}>Signing in with Google...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', position: 'relative' }}>
       <div className="grid-bg" />
 
-      {/* Nav */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(247,246,242,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--border)', height: 60, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(247,246,242,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--border)', height: 60, display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--text)', fontWeight: 600, fontSize: 15 }}>
           <BrandIcon size={28} /> Campaign Intelligence
         </a>
@@ -352,14 +396,20 @@ export default function Auth() {
         </button>
       </nav>
 
-      {/* Card */}
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '100px 24px 60px' }}>
-        <div style={cardStyle}>
+        <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 420, padding: 40, boxShadow: '0 2px 24px rgba(0,0,0,0.04)', animation: 'fadeUp .4s cubic-bezier(.22,1,.36,1)' }}>
+
+          {/* Google error */}
+          {googleError && (
+            <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 16 }}>
+              {googleError}
+            </div>
+          )}
+
           {page === 'forgot' ? (
             <ForgotForm onBack={() => setPage('auth')} />
           ) : (
             <>
-              {/* Tab row */}
               <div style={{ display: 'flex', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 4, marginBottom: 28, gap: 4 }}>
                 {(['login', 'signup'] as AuthTab[]).map(t => (
                   <button key={t} onClick={() => setTab(t)} style={{
