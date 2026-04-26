@@ -9,7 +9,7 @@ type Page = 'auth' | 'forgot';
 
 function isEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+
 function GoogleIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24">
@@ -331,6 +331,12 @@ export default function Auth() {
   const [googleError, setGoogleError] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+const existingToken = localStorage.getItem('auth_token');
+if (existingToken) {
+  navigate('/dashboard');
+  return;
+}
 
   // Handle Google redirect result when user comes back from Google
   useEffect(() => {
