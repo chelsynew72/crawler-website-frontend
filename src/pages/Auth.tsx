@@ -332,11 +332,12 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-const existingToken = localStorage.getItem('auth_token');
-if (existingToken) {
-  navigate('/dashboard');
-  return;
-}
+  useEffect(() => {
+    const existingToken = localStorage.getItem('auth_token');
+    if (existingToken) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   // Handle Google redirect result when user comes back from Google
   useEffect(() => {
