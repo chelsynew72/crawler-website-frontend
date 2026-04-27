@@ -196,7 +196,7 @@ export default function Landing() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 14px', borderBottom: '1px solid var(--border)', background: 'var(--bg-2)' }}>
               {['#FF5F57','#FFBD2E','#28CA41'].map((c, i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
               {!isMobile && <div style={{ flex: 1, background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 5, padding: '4px 10px', fontFamily: 'var(--ff-mono)', fontSize: 11, color: 'var(--text-3)', margin: '0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                campaign-intelligence.workers.dev/campaigns/pricing-research/pages
+                my-crawler-ui.vercel.app/campaigns/pricing-research/pages
               </div>}
             </div>
             {/* Window body */}
