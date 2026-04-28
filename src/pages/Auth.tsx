@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandIcon, Btn, Input } from '../components/ui';
 import { api } from '../api';
-import { signInWithGoogle, getGoogleRedirectResult } from '../firebase';
 
 type AuthTab = 'login' | 'signup';
 type Page = 'auth' | 'forgot';
@@ -10,68 +9,6 @@ type Page = 'auth' | 'forgot';
 function isEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
 
-function GoogleIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
-  );
-}
-
-// ── Divider ───────────────────────────────────────────────────────────────────
-function Divider() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      <span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--ff-mono)', whiteSpace: 'nowrap' }}>or continue with email</span>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-    </div>
-  );
-}
-
-// ── Google Button ─────────────────────────────────────────────────────────────
-function GoogleBtn({ mode }: { mode: 'login' | 'signup' }) {
-  const [loading, setLoading] = useState(false);
-  const verb = mode === 'login' ? 'Continue' : 'Sign up';
-
-  async function handleClick() {
-    setLoading(true);
-    try {
-      await signInWithGoogle();
-      // Page will redirect to Google — control returns to Auth useEffect on callback
-    } catch (e: any) {
-      console.error('Google redirect failed:', e);
-      setLoading(false);
-    }
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-        padding: '10px 16px', border: '1px solid var(--border-dark)', borderRadius: 8,
-        background: 'var(--white)', color: 'var(--text)', fontSize: 14, fontWeight: 400,
-        fontFamily: 'var(--ff-sans)', cursor: loading ? 'not-allowed' : 'pointer',
-        opacity: loading ? 0.7 : 1, width: '100%',
-        transition: 'background .15s, border-color .15s',
-      }}
-      onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--bg)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'var(--white)'; }}
-    >
-      {loading ? (
-        <div style={{ width: 16, height: 16, border: '2px solid var(--border-dark)', borderTopColor: 'var(--orange)', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-      ) : <GoogleIcon />}
-      {loading ? 'Redirecting to Google...' : `${verb} with Google`}
-    </button>
-  );
-}
-
-// ── Login Form ────────────────────────────────────────────────────────────────
 function LoginForm({ onForgot, onSwitchSignup }: { onForgot: () => void; onSwitchSignup: () => void }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -108,9 +45,6 @@ function LoginForm({ onForgot, onSwitchSignup }: { onForgot: () => void; onSwitc
       <p style={{ fontSize: 14, color: 'var(--text-2)', fontWeight: 300, marginBottom: 24, lineHeight: 1.55 }}>
         Log in to your campaigns and insights.
       </p>
-
-      <GoogleBtn mode="login" />
-      <Divider />
 
       {errors.general && (
         <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>
@@ -209,9 +143,6 @@ function SignupForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
         Start <em style={{ fontStyle: 'italic', color: 'var(--orange)' }}>crawling</em>
       </h1>
       <p style={{ fontSize: 14, color: 'var(--text-2)', fontWeight: 300, marginBottom: 24 }}>Free account. No credit card required.</p>
-
-      <GoogleBtn mode="signup" />
-      <Divider />
 
       {errors.general && (
         <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>
@@ -327,8 +258,6 @@ function ForgotForm({ onBack }: { onBack: () => void }) {
 export default function Auth() {
   const [tab, setTab] = useState<AuthTab>('login');
   const [page, setPage] = useState<Page>('auth');
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -339,55 +268,11 @@ export default function Auth() {
     }
   }, [navigate]);
 
-  // Handle Google redirect result when user comes back from Google
+  // Handle search params for tab/page
   useEffect(() => {
     if (searchParams.get('tab') === 'signup') setTab('signup');
     if (searchParams.get('page') === 'forgot') setPage('forgot');
-
-    // Check for Google redirect result
-    setGoogleLoading(true);
-    getGoogleRedirectResult()
-      .then(async (result) => {
-        setGoogleLoading(false);
-        if (!result) return; // No redirect result — normal page load
-
-        // We have a Google user — exchange for our token
-        try {
-          const firebaseToken = await result.user.getIdToken();
-          const displayName   = result.user.displayName ?? '';
-          const parts         = displayName.split(' ');
-
-          const res = await api.authFirebase({
-            firebase_token: firebaseToken,
-            first_name: parts[0] || 'User',
-            last_name:  parts.slice(1).join(' ') || '',
-            email:      result.user.email ?? '',
-          });
-
-          localStorage.setItem('auth_token', res.token);
-          navigate('/dashboard');
-        } catch (e: any) {
-          setGoogleError('Google sign-in failed: ' + e.message);
-        }
-      })
-      .catch((err) => {
-        setGoogleLoading(false);
-        // auth/cancelled errors are normal — user closed the popup or cancelled
-        if (!err.code?.includes('cancelled') && !err.code?.includes('popup-closed')) {
-          setGoogleError('Google sign-in error: ' + err.message);
-        }
-      });
-  }, [navigate, searchParams]);
-
-  // Show loading spinner while processing Google redirect
-  if (googleLoading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: 16, background: 'var(--bg)' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid var(--border)', borderTopColor: 'var(--orange)', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-        <p style={{ fontSize: 14, color: 'var(--text-2)', fontFamily: 'var(--ff-sans)' }}>Signing in with Google...</p>
-      </div>
-    );
-  }
+  }, [searchParams]);
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', position: 'relative' }}>
@@ -405,13 +290,6 @@ export default function Auth() {
 
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '100px 24px 60px' }}>
         <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 420, padding: 40, boxShadow: '0 2px 24px rgba(0,0,0,0.04)', animation: 'fadeUp .4s cubic-bezier(.22,1,.36,1)' }}>
-
-          {/* Google error */}
-          {googleError && (
-            <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 8, padding: '10px 13px', fontSize: 13, color: 'var(--red)', marginBottom: 16 }}>
-              {googleError}
-            </div>
-          )}
 
           {page === 'forgot' ? (
             <ForgotForm onBack={() => setPage('auth')} />

@@ -1,9 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
   signOut,
 } from 'firebase/auth';
 
@@ -18,20 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-
-export async function signInWithGoogle(): Promise<void> {
-  await signInWithRedirect(auth, googleProvider);
-}
-
-export async function getGoogleRedirectResult() {
-  return getRedirectResult(auth);
-}
 
 export async function firebaseSignOut() {
   await signOut(auth);
 }
-
-
-
-

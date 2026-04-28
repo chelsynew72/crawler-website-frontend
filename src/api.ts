@@ -22,8 +22,6 @@ export const api = {
     req<{ token: string; user: User }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   signup: (body: SignupBody) =>
     req<{ token: string; user: User }>('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
-  authFirebase: (body: { firebase_token: string; first_name: string; last_name: string; email: string }) =>
-    req<{ token: string; user: User }>('/auth/firebase', { method: 'POST', body: JSON.stringify(body) }),
   forgotPassword: (email: string) =>
     req<{ message: string }>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
   me: () => req<User>('/auth/me'),
