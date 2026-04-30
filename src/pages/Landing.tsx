@@ -65,9 +65,8 @@ const NAV_ITEMS = {
 };
 
 // ── Dropdown component ────────────────────────────────────────────────────────
-function NavDropdown({ label, data, onClose }: { label: string; data: typeof NAV_ITEMS[keyof typeof NAV_ITEMS]; onClose: () => void }) {
+function NavDropdown({ data, onClose }: { data: typeof NAV_ITEMS[keyof typeof NAV_ITEMS]; onClose: () => void }) {
   if (!data) return null;
-  const allItems = data.sections.flatMap(s => s.items.map(i => ({ ...i, section: s.label })));
   const hasSections = data.sections.length > 1;
 
   return (
@@ -186,7 +185,7 @@ function NavLink({ label, data, navigate }: { label: string; data: typeof NAV_IT
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </button>
-      {open && <NavDropdown label={label} data={data} onClose={() => setOpen(false)} />}
+      {open && <NavDropdown data={data} onClose={() => setOpen(false)} />}
     </div>
   );
 }
